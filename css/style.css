@@ -1,0 +1,442 @@
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
+
+:root {
+    --background: #fbfaf7;
+    --white: #ffffff;
+    --text: #252820;
+    --muted: #74776e;
+    --accent: #66765b;
+    --border: #e9e7df;
+}
+
+/* GENERAL */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: var(--background);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    line-height: 1.6;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+img {
+    width: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+/* NAVIGATION */
+
+header {
+    background: rgba(251,250,247,0.96);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.navbar {
+    max-width: 1200px;
+    margin: auto;
+    height: 80px;
+    padding: 0 25px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 23px;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+.logo-paw {
+    position: relative;
+    isolation: isolate;
+}
+
+.logo-paw::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    width: 36px;
+    height: 36px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) rotate(-12deg);
+    background:
+        radial-gradient(ellipse at 50% 76%, #e6a0b7 0 14%, #fff 15% 29%, transparent 30%),
+        radial-gradient(ellipse at 20% 34%, #e6a0b7 0 5%, #fff 6% 12%, transparent 13%),
+        radial-gradient(ellipse at 40% 18%, #e6a0b7 0 5%, #fff 6% 12%, transparent 13%),
+        radial-gradient(ellipse at 63% 18%, #e6a0b7 0 5%, #fff 6% 12%, transparent 13%),
+        radial-gradient(ellipse at 82% 36%, #e6a0b7 0 5%, #fff 6% 12%, transparent 13%);
+}
+
+.logo-dictionary,
+.logo-dot {
+    color: var(--accent);
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    gap: 35px;
+}
+
+.nav-links a {
+    font-size: 14px;
+    color: var(--muted);
+    transition: 0.3s;
+}
+
+.nav-links a:hover {
+    color: var(--accent);
+}
+
+
+.nav-links a {
+    display: inline-block;
+    text-decoration: none;
+    color: var(--text, #333);
+    padding: 10px 16px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.nav-links a:hover {
+    color: #ffffff;
+    background-color: var(--accent, #6c9b7d);
+    transform: translateY(-2px);
+}
+
+/* HERO */
+
+.hero {
+    max-width: 1200px;
+    margin: auto;
+    padding: 80px 25px;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 60px;
+}
+
+.subtitle {
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    margin-bottom: 15px;
+}
+
+.hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 65px;
+    line-height: 1.1;
+    margin-bottom: 25px;
+}
+
+.hero h1 span {
+    color: var(--accent);
+}
+
+.hero-content > p:not(.subtitle) {
+    color: var(--muted);
+    max-width: 500px;
+    margin-bottom: 30px;
+}
+
+.hero-image img {
+    height: 480px;
+    border-radius: 20px;
+}
+
+.primary-btn {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    padding: 14px 25px;
+    border-radius: 30px;
+    transition: 0.3s;
+}
+
+.primary-btn:hover {
+    background: #4f6045;
+    transform: translateY(-2px);
+}
+
+/* SECTIONS */
+
+.section {
+    max-width: 1200px;
+    margin: auto;
+    padding: 65px 25px;
+}
+
+.listing-page > .section {
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+.section-heading {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.section-heading h1,
+.section-heading h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 42px;
+}
+
+.section-heading > p:last-child {
+    color: var(--muted);
+    margin-top: 10px;
+}
+
+/* CATEGORY CARDS */
+
+.category-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+}
+
+.category-card {
+    height: 340px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 18px;
+}
+
+.category-card img {
+    height: 100%;
+    transition: 0.4s;
+}
+
+.category-card:hover img {
+    transform: scale(1.05);
+}
+
+.category-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        transparent,
+        rgba(0,0,0,0.75)
+    );
+}
+
+.category-info {
+    position: absolute;
+    bottom: 25px;
+    left: 25px;
+    color: white;
+    z-index: 2;
+}
+
+.category-info h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+}
+
+.category-info p {
+    font-size: 14px;
+}
+
+/* BREED CARDS */
+
+.breed-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+}
+
+.breed-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    overflow: hidden;
+    transition: 0.3s;
+}
+
+.breed-card-link {
+    display: block;
+    color: inherit;
+}
+
+.photo-credit {
+    display: block;
+    padding: 0 20px 14px;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.photo-credit:hover {
+    color: var(--accent);
+}
+
+.about-content .photo-credit {
+    padding: 0;
+    font-size: 12px;
+}
+
+.breed-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.07);
+}
+
+.breed-card img {
+    height: 250px;
+}
+
+.husky-photo {
+    object-position: center 20%;
+}
+
+.ragdoll-photo,
+.bengal-photo {
+    object-position: center 20%;
+}
+
+.breed-info {
+    padding: 20px;
+}
+
+.breed-info h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 23px;
+    margin-bottom: 5px;
+}
+
+.breed-info p {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.breed-info span {
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+/* LISTING PAGES */
+
+.listing-page {
+    max-width: 1200px;
+    margin: auto;
+    padding: 70px 25px;
+}
+
+/* ABOUT PAGE */
+
+.about-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 50px;
+    align-items: center;
+}
+
+.about-content img {
+    height: 400px;
+    border-radius: 20px;
+}
+
+.about-content h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 35px;
+    margin-bottom: 20px;
+}
+
+.about-content p {
+    color: var(--muted);
+    margin-bottom: 15px;
+}
+
+/* FOOTER */
+
+footer {
+    text-align: center;
+    padding: 45px 20px;
+    border-top: 1px solid var(--border);
+    margin-top: 70px;
+    color: var(--muted);
+}
+
+footer h3 {
+    color: var(--text);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+}
+
+/* RESPONSIVE DESIGN */
+
+@media (max-width: 800px) {
+
+    .hero {
+        grid-template-columns: 1fr;
+    }
+
+    .hero h1 {
+        font-size: 48px;
+    }
+
+    .breed-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .about-content {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 550px) {
+
+    .navbar {
+        height: auto;
+        padding: 20px;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .nav-links {
+        gap: 15px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .hero h1 {
+        font-size: 40px;
+    }
+
+    .hero-image img {
+        height: 300px;
+    }
+
+    .category-container,
+    .breed-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .section-heading h1,
+    .section-heading h2 {
+        font-size: 32px;
+    }
+}
