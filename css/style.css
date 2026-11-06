@@ -305,6 +305,41 @@ header {
     transition: 0.4s;
 }
 
+.category-mascot {
+    position: absolute;
+    z-index: 2;
+    right: 18px;
+    bottom: -12px;
+    width: 140px;
+    height: 140px;
+    opacity: 0;
+    transform: translateY(110%) rotate(10deg);
+    transition: opacity 0.25s ease, transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+    pointer-events: none;
+}
+
+.mascot-drawing {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.category-card:hover .category-mascot,
+.category-card:focus-visible .category-mascot {
+    opacity: 1;
+    transform: translateY(0) rotate(0);
+}
+
+.category-card:hover .mascot-drawing,
+.category-card:focus-visible .mascot-drawing {
+    animation: mascot-bob 1.8s ease-in-out infinite;
+}
+
+@keyframes mascot-bob {
+    0%, 100% { transform: translateY(0) rotate(0); }
+    50% { transform: translateY(-4px) rotate(2deg); }
+}
+
 .category-card:hover img {
     transform: scale(1.05);
 }
@@ -312,6 +347,7 @@ header {
 .category-card::after {
     content: "";
     position: absolute;
+    z-index: 1;
     inset: 0;
     background: linear-gradient(
         transparent,
@@ -324,7 +360,7 @@ header {
     bottom: 25px;
     left: 25px;
     color: white;
-    z-index: 2;
+    z-index: 3;
 }
 
 .category-info h3 {
@@ -334,6 +370,18 @@ header {
 
 .category-info p {
     font-size: 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .category-mascot,
+    .category-card img {
+        transition: none;
+    }
+
+    .category-card:hover .mascot-drawing,
+    .category-card:focus-visible .mascot-drawing {
+        animation: none;
+    }
 }
 
 /* BREED CARDS */
