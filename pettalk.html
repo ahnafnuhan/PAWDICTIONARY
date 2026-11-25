@@ -68,15 +68,6 @@
             const displayName = metadata.name || metadata.full_name || user.email || "Pet community member";
             const avatarUrl = metadata.avatar_url || null;
 
-            await supabase
-                .from("public_profiles")
-                .upsert({
-                    id: user.id,
-                    display_name: displayName,
-                    avatar_url: avatarUrl,
-                    updated_at: new Date().toISOString(),
-                });
-
             function appendMessage(message) {
                 const item = document.createElement("article");
                 item.className = "pettalk-message";

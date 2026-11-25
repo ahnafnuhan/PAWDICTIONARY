@@ -60,22 +60,24 @@
             if (!session) {
                 window.location.replace("auth.html#signin");
             } else {
-                const { data, error } = await supabase
-                    .from("public_profiles")
+                const { data: profile, error: profileError } = await supabase
+                    .from("pet_talk_messages")
                     .select("display_name, avatar_url")
-                    .eq("id", userId)
+                    .eq("user_id", userId)
+                    .order("created_at", { ascending: false })
+                    .limit(1)
                     .maybeSingle();
 
-                if (error) {
-                    status.textContent = `Could not load profile: ${error.message}`;
+                if (profileError) {
+                    status.textContent = `Could not load profile: ${profileError.message}`;
                     title.textContent = "Profile unavailable";
-                } else if (!data) {
+                } else if (!profile) {
                     title.textContent = "Profile not found";
                     status.textContent = "This member does not have a public profile yet.";
                 } else {
-                    title.textContent = data.display_name;
+                    title.textContent = profile.display_name;
                     status.textContent = "PAWDICTIONARY community member";
-                    if (data.avatar_url) avatar.src = data.avatar_url;
+                    if (profile.avatar_url) avatar.src = profile.avatar_url;
                 }
             }
         }
