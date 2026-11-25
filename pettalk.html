@@ -106,19 +106,23 @@
                     .limit(200);
 
                 if (error) {
-                    status.textContent = `Could not load messages: ${error.message}`;
+                    status.textContent = `Could not load messages: ${error.message}${error.details ? ` (${error.details})` : ""}`;
                     return;
                 }
 
                 messages.replaceChildren();
                 data.forEach(appendMessage);
+                if (!data.length) status.textContent = "No messages yet. Start the conversation.";
             }
 
             form.addEventListener("submit", async (event) => {
                 event.preventDefault();
                 const body = input.value.trim();
                 const imageFile = imageInput.files[0];
-                if (!body && !imageFile) return;
+                if (!body && !imageFile) {
+                    status.textContent = "Write a message or choose an image.";
+                    return;
+                }
 
                 submitButton.disabled = true;
                 status.textContent = "Sending...";
@@ -158,14 +162,17 @@
                         display_name: displayName,
                         body: body || null,
                         image_url: imageUrl,
-                    });
+                    })
+                    .select("id")
+                    .single();
 
                 if (error) {
-                    status.textContent = `Could not send message: ${error.message}`;
+                    status.textContent = `Could not send message: ${error.message}${error.details ? ` (${error.details})` : ""}`;
                 } else {
                     input.value = "";
                     imageInput.value = "";
                     status.textContent = "";
+                    await loadMessages();
                 }
 
                 submitButton.disabled = false;

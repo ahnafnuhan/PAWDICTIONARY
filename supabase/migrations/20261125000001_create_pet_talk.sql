@@ -13,6 +13,20 @@ alter table public.pet_talk_messages
 alter table public.pet_talk_messages
     add column if not exists image_url text;
 
+alter table public.pet_talk_messages
+    drop constraint if exists pet_talk_messages_body_check;
+
+alter table public.pet_talk_messages
+    add constraint pet_talk_messages_body_check
+    check (body is null or char_length(body) between 1 and 1000);
+
+alter table public.pet_talk_messages
+    drop constraint if exists pet_talk_messages_content_check;
+
+alter table public.pet_talk_messages
+    add constraint pet_talk_messages_content_check
+    check (body is not null or image_url is not null);
+
 alter table public.pet_talk_messages enable row level security;
 
 drop policy if exists "Signed-in users can read PetTalk messages" on public.pet_talk_messages;
