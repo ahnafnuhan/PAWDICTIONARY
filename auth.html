@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In or Sign Up | PAWDICTIONARY</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="index.html" class="logo"><span class="logo-paw">PAW</span><span class="logo-dictionary">DICTIONARY</span><span class="logo-dot">.</span></a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="cats.html">Cats</a></li>
+                <li><a href="dogs.html">Dogs</a></li>
+                <li><a href="my_cat.html">My Cat</a></li>
+                <li><a href="about_us.html">About Us</a></li>
+                <li><a href="auth.html#signin">Sign In</a></li>
+                <li class="nav-sign-up"><a href="auth.html#signup">Sign Up</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="auth-page">
+        <section class="auth-card" aria-labelledby="auth-title">
+            <div class="auth-heading">
+                <p class="subtitle">WELCOME TO PAWDICTIONARY</p>
+                <h1 id="auth-title">Your pet community</h1>
+                <p>Sign in or create an account to get started.</p>
+            </div>
+
+            <div class="auth-tabs" role="tablist" aria-label="Account options">
+                <button class="auth-tab" id="signin-tab" type="button" role="tab" aria-controls="signin-panel" aria-selected="true">Sign In</button>
+                <button class="auth-tab" id="signup-tab" type="button" role="tab" aria-controls="signup-panel" aria-selected="false">Sign Up</button>
+            </div>
+
+            <form class="auth-form" id="signin-panel" role="tabpanel" aria-labelledby="signin-tab">
+                <label class="auth-field" for="signin-email">
+                    Email address
+                    <input id="signin-email" name="email" type="email" autocomplete="email" required>
+                </label>
+                <label class="auth-field" for="signin-password">
+                    Password
+                    <input id="signin-password" name="password" type="password" autocomplete="current-password" required>
+                </label>
+                <button class="primary-btn auth-submit" type="submit">Sign In</button>
+                <p class="auth-message" aria-live="polite"></p>
+            </form>
+
+            <form class="auth-form" id="signup-panel" role="tabpanel" aria-labelledby="signup-tab" hidden>
+                <label class="auth-field" for="signup-name">
+                    Your name
+                    <input id="signup-name" name="name" type="text" autocomplete="name" required>
+                </label>
+                <label class="auth-field" for="signup-email">
+                    Email address
+                    <input id="signup-email" name="email" type="email" autocomplete="email" required>
+                </label>
+                <label class="auth-field" for="signup-password">
+                    Password
+                    <input id="signup-password" name="password" type="password" autocomplete="new-password" minlength="8" required>
+                </label>
+                <button class="primary-btn auth-submit" type="submit">Create Account</button>
+                <p class="auth-message" aria-live="polite"></p>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <h3>PAWDICTIONARY.</h3>
+        <p>Discover. Learn. Care.</p>
+    </footer>
+
+    <script>
+        const tabs = Array.from(document.querySelectorAll(".auth-tab"));
+        const forms = Array.from(document.querySelectorAll(".auth-form"));
+
+        function selectAuthMode(mode) {
+            const selectedIndex = mode === "signup" ? 1 : 0;
+            tabs.forEach((tab, index) => {
+                const selected = index === selectedIndex;
+                tab.setAttribute("aria-selected", String(selected));
+                forms[index].hidden = !selected;
+            });
+        }
+
+        tabs.forEach((tab, index) => {
+            tab.addEventListener("click", () => {
+                selectAuthMode(index === 1 ? "signup" : "signin");
+                history.replaceState(null, "", index === 1 ? "#signup" : "#signin");
+            });
+        });
+
+        window.addEventListener("hashchange", () => {
+            selectAuthMode(location.hash === "#signup" ? "signup" : "signin");
+        });
+        selectAuthMode(location.hash === "#signup" ? "signup" : "signin");
+
+        forms.forEach((form) => {
+            form.addEventListener("submit", (event) => {
+                event.preventDefault();
+                form.querySelector(".auth-message").textContent =
+                    "Authentication is not connected yet. Please connect an account service to continue.";
+            });
+        });
+    </script>
+</body>
+</html>
