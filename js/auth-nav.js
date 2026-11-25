@@ -7,8 +7,22 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 const navLinks = document.querySelector(".nav-links");
 
 function removeAuthenticationLinks() {
-    document.querySelectorAll('a[href="auth.html#signin"], a[href="auth.html#signup"]').forEach((link) => {
-        link.closest("li")?.remove();
+    if (!navLinks) return;
+
+    navLinks.querySelectorAll("li").forEach((item) => {
+        const link = item.querySelector("a");
+        if (!link) return;
+
+        const href = link.getAttribute("href") || "";
+        const label = link.textContent.trim();
+        if (
+            href === "auth.html#signin"
+            || href === "auth.html#signup"
+            || label === "Sign In"
+            || label === "Sign Up"
+        ) {
+            item.remove();
+        }
     });
 }
 
