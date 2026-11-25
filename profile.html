@@ -60,7 +60,15 @@
             if (!session) {
                 window.location.replace("auth.html#signin");
             } else {
-                const { data: profile, error: profileError } = await supabase
+                const { data: publicProfile, error: publicProfileError } = await supabase
+                    .from("public_profiles")
+                    .select("display_name, avatar_url")
+                    .eq("id", userId)
+                    .maybeSingle();
+
+                const { data: messageProfile, error: messageProfileError } = publicProfile
+                    ? { data: publicProfile, error: null }
+                    : await supabase
                     .from("pet_talk_messages")
                     .select("display_name, avatar_url")
                     .eq("user_id", userId)
@@ -68,7 +76,10 @@
                     .limit(1)
                     .maybeSingle();
 
-                if (profileError) {
+                const profile = publicProfile || messageProfile;
+                const profileError = publicProfileError || messageProfileError;
+
+                if (profileError && !profile) {
                     status.textContent = `Could not load profile: ${profileError.message}`;
                     title.textContent = "Profile unavailable";
                 } else if (!profile) {

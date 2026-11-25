@@ -68,6 +68,15 @@
             const displayName = metadata.name || metadata.full_name || user.email || "Pet community member";
             const avatarUrl = metadata.avatar_url || null;
 
+            await supabase
+                .from("public_profiles")
+                .upsert({
+                    id: user.id,
+                    display_name: displayName,
+                    avatar_url: avatarUrl,
+                    updated_at: new Date().toISOString(),
+                });
+
             function appendMessage(message) {
                 const item = document.createElement("article");
                 item.className = "pettalk-message";
@@ -75,13 +84,11 @@
                 const identity = document.createElement("div");
                 identity.className = "pettalk-identity";
 
-                if (message.avatar_url) {
-                    const avatar = document.createElement("img");
-                    avatar.className = "pettalk-avatar";
-                    avatar.src = message.avatar_url;
-                    avatar.alt = "";
-                    identity.appendChild(avatar);
-                }
+                const avatar = document.createElement("img");
+                avatar.className = "pettalk-avatar";
+                avatar.src = message.avatar_url || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='38' r='18' fill='%23cbd2c4'/%3E%3Cpath d='M18 92a32 32 0 0 1 64 0' fill='%23cbd2c4'/%3E%3C/svg%3E";
+                avatar.alt = "";
+                identity.appendChild(avatar);
 
                 const name = document.createElement("a");
                 name.href = `profile.html?id=${encodeURIComponent(message.user_id)}`;
@@ -124,8 +131,26 @@
                     return;
                 }
 
+                const senderIds = [...new Set(data.map((message) => message.user_id).filter(Boolean))];
+                let publicProfiles = [];
+                if (senderIds.length) {
+                    const { data: profiles } = await supabase
+                        .from("public_profiles")
+                        .select("id, display_name, avatar_url")
+                        .in("id", senderIds);
+                    publicProfiles = profiles || [];
+                }
+                const profilesById = new Map(publicProfiles.map((profile) => [profile.id, profile]));
+
                 messages.replaceChildren();
-                data.forEach(appendMessage);
+                data.forEach((message) => {
+                    const profile = profilesById.get(message.user_id);
+                    appendMessage({
+                        ...message,
+                        display_name: profile?.display_name || message.display_name,
+                        avatar_url: profile?.avatar_url || message.avatar_url,
+                    });
+                });
                 if (!data.length) status.textContent = "No messages yet. Start the conversation.";
             }
 

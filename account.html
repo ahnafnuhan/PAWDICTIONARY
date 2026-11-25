@@ -150,6 +150,14 @@
 
                 document.querySelector("#account-name").textContent = newName;
                 document.querySelector("#account-welcome").textContent = `Hello, ${newName}. You are successfully logged in.`;
+                await supabase
+                    .from("public_profiles")
+                    .upsert({
+                        id: user.id,
+                        display_name: newName,
+                        avatar_url: metadata.avatar_url || null,
+                        updated_at: new Date().toISOString(),
+                    });
                 message.textContent = "Username updated.";
             });
 
@@ -180,6 +188,14 @@
 
                     document.querySelector("#profile-avatar").src = avatarUrl;
                     document.querySelector("#remove-profile-picture").hidden = false;
+                    await supabase
+                        .from("public_profiles")
+                        .upsert({
+                            id: user.id,
+                            display_name: name,
+                            avatar_url: avatarUrl,
+                            updated_at: new Date().toISOString(),
+                        });
                     message.textContent = "Profile picture updated.";
                 } catch (error) {
                     message.textContent = `Upload failed: ${error.message}`;
@@ -318,6 +334,14 @@
                     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='38' r='18' fill='%23cbd2c4'/%3E%3Cpath d='M18 92a32 32 0 0 1 64 0' fill='%23cbd2c4'/%3E%3C/svg%3E";
                 document.querySelector("#remove-profile-picture").hidden = true;
                 message.textContent = "Profile picture removed.";
+                await supabase
+                    .from("public_profiles")
+                    .upsert({
+                        id: user.id,
+                        display_name: name,
+                        avatar_url: null,
+                        updated_at: new Date().toISOString(),
+                    });
 
                 if (window.location.pathname.endsWith("account.html")) {
                     window.location.reload();
