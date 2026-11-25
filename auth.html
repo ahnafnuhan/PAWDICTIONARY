@@ -91,6 +91,11 @@
         const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_dPY3CDRcFiCKG3HStHQbOA_w6mBHuBR";
         const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+            window.location.replace("index.html");
+        }
+
         const tabs = Array.from(document.querySelectorAll(".auth-tab"));
         const forms = Array.from(document.querySelectorAll(".auth-form"));
 
@@ -200,5 +205,6 @@
             }
         });
     </script>
+    <script type="module" src="js/auth-nav.js"></script>
 </body>
 </html>

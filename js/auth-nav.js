@@ -17,7 +17,12 @@ if (navLinks && !navLinks.querySelector('a[href="pettalk.html"]')) {
 async function updateNavigation() {
     const { data: { session } } = await supabase.auth.getSession();
 
-    if (!session) return;
+    if (!session) {
+        signInLink?.closest("li")?.hidden = false;
+        signUpLink?.closest("li")?.hidden = false;
+        document.querySelector(".nav-user")?.remove();
+        return;
+    }
 
     signInLink?.closest("li")?.remove();
     signUpLink?.closest("li")?.remove();
@@ -48,3 +53,13 @@ async function updateNavigation() {
 }
 
 updateNavigation();
+
+supabase.auth.onAuthStateChange((_event, session) => {
+    if (session) {
+        updateNavigation();
+    } else {
+        signInLink?.closest("li")?.hidden = false;
+        signUpLink?.closest("li")?.hidden = false;
+        document.querySelector(".nav-user")?.remove();
+    }
+});
