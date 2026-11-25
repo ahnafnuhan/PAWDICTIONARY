@@ -6,13 +6,6 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
 const navLinks = document.querySelector(".nav-links");
 
-if (navLinks && !navLinks.querySelector('a[href="pettalk.html"]')) {
-    const petTalkItem = document.createElement("li");
-    petTalkItem.innerHTML = '<a href="pettalk.html">PetTalk</a>';
-    const authLink = navLinks.querySelector('a[href="auth.html#signin"], a[href="auth.html#signup"]');
-    navLinks.insertBefore(petTalkItem, authLink?.closest("li") || null);
-}
-
 function removeAuthenticationLinks() {
     document.querySelectorAll('a[href="auth.html#signin"], a[href="auth.html#signup"]').forEach((link) => {
         link.closest("li")?.remove();
