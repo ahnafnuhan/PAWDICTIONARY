@@ -6,6 +6,13 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
 const signInLink = document.querySelector('a[href="auth.html#signin"]');
 const signUpLink = document.querySelector('a[href="auth.html#signup"]');
+const navLinks = document.querySelector(".nav-links");
+
+if (navLinks && !navLinks.querySelector('a[href="pettalk.html"]')) {
+    const petTalkItem = document.createElement("li");
+    petTalkItem.innerHTML = '<a href="pettalk.html">PetTalk</a>';
+    navLinks.insertBefore(petTalkItem, signInLink?.closest("li") || signUpLink?.closest("li") || null);
+}
 
 async function updateNavigation() {
     const { data: { session } } = await supabase.auth.getSession();
@@ -23,8 +30,7 @@ async function updateNavigation() {
 
     const userMetadata = session.user.user_metadata || {};
     const name = userMetadata.name || userMetadata.full_name || "User";
-    const avatarUrl = userMetadata.avatar_url
-        || localStorage.getItem(`pawdictionary-avatar-${session.user.id}`);
+    const avatarUrl = userMetadata.avatar_url;
 
     const item = document.createElement("li");
     item.className = "nav-user";

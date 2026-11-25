@@ -16,6 +16,7 @@
                 <li><a href="dogs.html">Dogs</a></li>
                 <li><a href="my_cat.html">My Cat</a></li>
                 <li><a href="about_us.html">About Us</a></li>
+                <li><a href="pettalk.html">PetTalk</a></li>
                 <li class="nav-sign-up"><a href="account.html">My Account</a></li>
             </ul>
         </nav>
@@ -99,9 +100,8 @@
             const metadata = user.user_metadata || {};
             const name = metadata.name || metadata.full_name || "Pet community member";
             const provider = user.app_metadata?.provider || "email";
-            const storageBucket = "profile-media";
-            const petStorageKey = `pawdictionary-pets-${user.id}`;
-            const avatarStorageKey = `pawdictionary-avatar-${user.id}`;
+            const storageBucket = "site-images";
+            const maxUploadSize = 10 * 1024 * 1024;
 
             document.querySelector("#account-welcome").textContent = `Hello, ${name}. You are successfully logged in.`;
             document.querySelector("#account-name").textContent = name;
@@ -113,12 +113,6 @@
             if (metadata.avatar_url) {
                 document.querySelector("#profile-avatar").src = metadata.avatar_url;
                 document.querySelector("#remove-profile-picture").hidden = false;
-            } else {
-                const savedAvatar = localStorage.getItem(avatarStorageKey);
-                if (savedAvatar) {
-                    document.querySelector("#profile-avatar").src = savedAvatar;
-                    document.querySelector("#remove-profile-picture").hidden = false;
-                }
             }
 
             document.querySelector("#profile-picture").addEventListener("change", async (event) => {
@@ -130,6 +124,7 @@
 
                 try {
                     if (!file.type.startsWith("image/")) throw new Error("Please choose an image file.");
+                    if (file.size > maxUploadSize) throw new Error("Please choose an image smaller than 10 MB.");
 
                     const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
                     const path = `${user.id}/avatar.${extension}`;
@@ -146,24 +141,10 @@
                     if (updateError) throw updateError;
 
                     document.querySelector("#profile-avatar").src = avatarUrl;
-                    localStorage.setItem(avatarStorageKey, avatarUrl);
                     document.querySelector("#remove-profile-picture").hidden = false;
                     message.textContent = "Profile picture updated.";
                 } catch (error) {
-                    if (error.message?.toLowerCase().includes("bucket") || error.message?.toLowerCase().includes("not found")) {
-                        const savedAvatar = await new Promise((resolve, reject) => {
-                            const reader = new FileReader();
-                            reader.onload = () => resolve(reader.result);
-                            reader.onerror = reject;
-                            reader.readAsDataURL(file);
-                        });
-                        localStorage.setItem(avatarStorageKey, savedAvatar);
-                        document.querySelector("#profile-avatar").src = savedAvatar;
-                        document.querySelector("#remove-profile-picture").hidden = false;
-                        message.textContent = "Profile picture saved on this browser.";
-                    } else {
-                        message.textContent = error.message;
-                    }
+                    message.textContent = `Upload failed: ${error.message}`;
                 }
             });
 
@@ -172,41 +153,27 @@
 
             async function loadPetPhotos() {
                 petGrid.replaceChildren();
-                const savedPhotos = JSON.parse(localStorage.getItem(petStorageKey) || "[]");
+                const files = [];
+                let offset = 0;
 
-                const { data: files, error } = await supabase.storage
-                    .from(storageBucket)
-                    .list(`${user.id}/pets`, {
-                        limit: 100,
-                        sortBy: { column: "created_at", order: "desc" },
-                    });
-
-                if (error) {
-                    if (error.message?.toLowerCase().includes("bucket") || error.message?.toLowerCase().includes("not found")) {
-                        petGrid.replaceChildren();
-                        savedPhotos.forEach((url) => {
-                            const figure = document.createElement("figure");
-                            const image = document.createElement("img");
-                            image.src = url;
-                            image.alt = "My pet";
-                            figure.appendChild(image);
-                            const deleteButton = document.createElement("button");
-                            deleteButton.type = "button";
-                            deleteButton.className = "pet-photo-delete";
-                            deleteButton.textContent = "Delete";
-                            deleteButton.addEventListener("click", () => {
-                                const remaining = savedPhotos.filter((savedUrl) => savedUrl !== url);
-                                localStorage.setItem(petStorageKey, JSON.stringify(remaining));
-                                loadPetPhotos();
-                            });
-                            figure.appendChild(deleteButton);
-                            petGrid.appendChild(figure);
+                while (true) {
+                    const { data, error } = await supabase.storage
+                        .from(storageBucket)
+                        .list(`${user.id}/pets`, {
+                            limit: 100,
+                            offset,
+                            sortBy: { column: "created_at", order: "desc" },
                         });
-                        petMessage.textContent = savedPhotos.length ? "" : "";
+
+                    if (error) {
+                        petMessage.textContent = `Could not load account photos: ${error.message}`;
                         return;
                     }
-                    petMessage.textContent = error.message;
-                    return;
+
+                    if (!data?.length) break;
+                    files.push(...data);
+                    if (data.length < 100) break;
+                    offset += data.length;
                 }
 
                 files.forEach((file) => {
@@ -214,13 +181,6 @@
                     const { data } = supabase.storage
                         .from(storageBucket)
                         .getPublicUrl(`${user.id}/pets/${file.name}`);
-                    const fallbackIndex = savedPhotos.findIndex((savedUrl) =>
-                        savedUrl === data.publicUrl || savedUrl.includes(`${user.id}/pets/${file.name}`)
-                    );
-                    if (fallbackIndex !== -1) {
-                        savedPhotos.splice(fallbackIndex, 1);
-                        localStorage.setItem(petStorageKey, JSON.stringify(savedPhotos));
-                    }
 
                     const figure = document.createElement("figure");
                     const image = document.createElement("img");
@@ -239,10 +199,6 @@
                             petMessage.textContent = removeError.message;
                             return;
                         }
-                        const remainingFallbacks = savedPhotos.filter(
-                            (savedUrl) => !savedUrl.includes(`${user.id}/pets/${file.name}`)
-                        );
-                        localStorage.setItem(petStorageKey, JSON.stringify(remainingFallbacks));
                         petMessage.textContent = "Pet photo deleted.";
                         await loadPetPhotos();
                     });
@@ -250,26 +206,7 @@
                     petGrid.appendChild(figure);
                 });
 
-                savedPhotos.forEach((url) => {
-                    const alreadyHosted = files.some((file) => url.includes(`${user.id}/pets/${file.name}`));
-                    if (alreadyHosted) return;
-                    const figure = document.createElement("figure");
-                    const image = document.createElement("img");
-                    image.src = url;
-                    image.alt = "My pet";
-                    figure.appendChild(image);
-                    const deleteButton = document.createElement("button");
-                    deleteButton.type = "button";
-                    deleteButton.className = "pet-photo-delete";
-                    deleteButton.textContent = "Delete";
-                    deleteButton.addEventListener("click", () => {
-                        const remaining = savedPhotos.filter((savedUrl) => savedUrl !== url);
-                        localStorage.setItem(petStorageKey, JSON.stringify(remaining));
-                        loadPetPhotos();
-                    });
-                    figure.appendChild(deleteButton);
-                    petGrid.appendChild(figure);
-                });
+                petMessage.textContent = files.length ? "" : "No pet photos uploaded yet.";
             }
 
             document.querySelector("#pet-photo").addEventListener("change", async (event) => {
@@ -280,65 +217,65 @@
 
                 try {
                     if (!file.type.startsWith("image/")) throw new Error("Please choose an image file.");
+                    if (file.size > maxUploadSize) throw new Error("Please choose an image smaller than 10 MB.");
 
                     const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
-                    const path = `${user.id}/pets/${Date.now()}.${extension}`;
+                    const uploadId = crypto.randomUUID
+                        ? crypto.randomUUID()
+                        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+                    const path = `${user.id}/pets/${uploadId}.${extension}`;
                     const { error: uploadError } = await supabase.storage
                         .from(storageBucket)
                         .upload(path, file, { cacheControl: "3600" });
                     if (uploadError) throw uploadError;
 
-                    const { data: publicUrlData } = supabase.storage
-                        .from(storageBucket)
-                        .getPublicUrl(path);
-
-                    const savedPhotos = JSON.parse(localStorage.getItem(petStorageKey) || "[]");
-                    if (!savedPhotos.includes(publicUrlData.publicUrl)) {
-                        savedPhotos.unshift(publicUrlData.publicUrl);
-                        localStorage.setItem(petStorageKey, JSON.stringify(savedPhotos));
-                    }
-
-                    petMessage.textContent = "Pet photo added.";
+                    petMessage.textContent = "Pet photo saved to your account.";
                     event.target.value = "";
                     await loadPetPhotos();
                 } catch (error) {
-                    if (error.message?.toLowerCase().includes("bucket") || error.message?.toLowerCase().includes("not found")) {
-                        const savedPhoto = await new Promise((resolve, reject) => {
-                            const reader = new FileReader();
-                            reader.onload = () => resolve(reader.result);
-                            reader.onerror = reject;
-                            reader.readAsDataURL(file);
-                        });
-                        const savedPhotos = JSON.parse(localStorage.getItem(petStorageKey) || "[]");
-                        savedPhotos.unshift(savedPhoto);
-                        localStorage.setItem(petStorageKey, JSON.stringify(savedPhotos));
-                        petMessage.textContent = "Pet photo saved on this browser.";
-                        event.target.value = "";
-                        await loadPetPhotos();
-                    } else {
-                        petMessage.textContent = error.message;
-                    }
+                    petMessage.textContent = `Upload failed: ${error.message}`;
                 }
             });
 
             loadPetPhotos();
+            window.addEventListener("focus", loadPetPhotos);
+            window.addEventListener("pageshow", loadPetPhotos);
+            document.addEventListener("visibilitychange", () => {
+                if (!document.hidden) loadPetPhotos();
+            });
+            const petPhotoRefreshTimer = window.setInterval(loadPetPhotos, 10000);
+            window.addEventListener("beforeunload", () => {
+                window.clearInterval(petPhotoRefreshTimer);
+            });
 
             document.querySelector("#remove-profile-picture").addEventListener("click", async () => {
                 const message = document.querySelector("#profile-message");
 
                 try {
-                    await supabase.auth.updateUser({
+                    const { error: updateError } = await supabase.auth.updateUser({
                         data: { avatar_url: null },
                     });
-                    await supabase.storage
+                    if (updateError) throw updateError;
+
+                    const { data: avatarFiles, error: listError } = await supabase.storage
                         .from(storageBucket)
-                        .remove([`${user.id}/avatar.jpg`, `${user.id}/avatar.jpeg`, `${user.id}/avatar.png`, `${user.id}/avatar.webp`]);
+                        .list(user.id, { limit: 100 });
+                    if (listError) throw listError;
+
+                    const avatarPaths = (avatarFiles || [])
+                        .map((item) => item.name)
+                        .filter((name) => name.startsWith("avatar."));
+                    if (avatarPaths.length) {
+                        const { error: removeError } = await supabase.storage
+                            .from(storageBucket)
+                            .remove(avatarPaths.map((name) => `${user.id}/${name}`));
+                        if (removeError) throw removeError;
+                    }
                 } catch (error) {
                     message.textContent = error.message;
                     return;
                 }
 
-                localStorage.removeItem(avatarStorageKey);
                 document.querySelector("#profile-avatar").src =
                     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='38' r='18' fill='%23cbd2c4'/%3E%3Cpath d='M18 92a32 32 0 0 1 64 0' fill='%23cbd2c4'/%3E%3C/svg%3E";
                 document.querySelector("#remove-profile-picture").hidden = true;

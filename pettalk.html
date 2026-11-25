@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PetTalk | PAWDICTIONARY</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="index.html" class="logo"><span class="logo-paw">PAW</span><span class="logo-dictionary">DICTIONARY</span><span class="logo-dot">.</span></a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="cats.html">Cats</a></li>
+                <li><a href="dogs.html">Dogs</a></li>
+                <li><a href="my_cat.html">My Cat</a></li>
+                <li><a href="about_us.html">About Us</a></li>
+                <li><a href="pettalk.html">PetTalk</a></li>
+                <li><a href="auth.html#signin">Sign In</a></li>
+                <li class="nav-sign-up"><a href="auth.html#signup">Sign Up</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="pettalk-page">
+        <section class="pettalk-card" aria-labelledby="pettalk-title">
+            <div class="pettalk-heading">
+                <p class="subtitle">COMMUNITY CHAT</p>
+                <h1 id="pettalk-title">PetTalk</h1>
+            </div>
+            <div class="pettalk-messages" id="pettalk-messages" aria-live="polite"></div>
+            <form class="pettalk-form" id="pettalk-form">
+                <textarea id="pettalk-input" maxlength="1000" placeholder="Ask a question or share pet advice..." required></textarea>
+                <button type="submit">Send</button>
+            </form>
+            <p class="pettalk-status" id="pettalk-status" aria-live="polite"></p>
+        </section>
+    </main>
+
+    <footer>
+        <h3>PAWDICTIONARY.</h3>
+        <p>Discover. Learn. Care.</p>
+    </footer>
+
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+        const SUPABASE_URL = "https://huqlhlxukomrozoymvdh.supabase.co";
+        const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_dPY3CDRcFiCKG3HStHQbOA_w6mBHuBR";
+        const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+        const messages = document.querySelector("#pettalk-messages");
+        const form = document.querySelector("#pettalk-form");
+        const input = document.querySelector("#pettalk-input");
+        const status = document.querySelector("#pettalk-status");
+        const submitButton = form.querySelector("button");
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+            window.location.replace("auth.html#signin");
+        } else {
+            const user = session.user;
+            const metadata = user.user_metadata || {};
+            const displayName = metadata.name || metadata.full_name || user.email || "Pet community member";
+
+            function appendMessage(message) {
+                const item = document.createElement("article");
+                item.className = "pettalk-message";
+
+                const name = document.createElement("strong");
+                name.textContent = message.display_name || "Member";
+
+                const body = document.createElement("p");
+                body.textContent = message.body;
+
+                const time = document.createElement("time");
+                time.dateTime = message.created_at;
+                time.textContent = new Date(message.created_at).toLocaleString();
+
+                item.append(name, body, time);
+                messages.appendChild(item);
+                messages.scrollTop = messages.scrollHeight;
+            }
+
+            async function loadMessages() {
+                status.textContent = "";
+                const { data, error } = await supabase
+                    .from("pet_talk_messages")
+                    .select("id, display_name, body, created_at")
+                    .order("created_at", { ascending: true })
+                    .limit(200);
+
+                if (error) {
+                    status.textContent = `Could not load messages: ${error.message}`;
+                    return;
+                }
+
+                messages.replaceChildren();
+                data.forEach(appendMessage);
+            }
+
+            form.addEventListener("submit", async (event) => {
+                event.preventDefault();
+                const body = input.value.trim();
+                if (!body) return;
+
+                submitButton.disabled = true;
+                status.textContent = "Sending...";
+
+                const { error } = await supabase
+                    .from("pet_talk_messages")
+                    .insert({
+                        user_id: user.id,
+                        display_name: displayName,
+                        body,
+                    });
+
+                if (error) {
+                    status.textContent = `Could not send message: ${error.message}`;
+                } else {
+                    input.value = "";
+                    status.textContent = "";
+                }
+
+                submitButton.disabled = false;
+            });
+
+            await loadMessages();
+
+            supabase
+                .channel("pettalk-live")
+                .on("postgres_changes", {
+                    event: "INSERT",
+                    schema: "public",
+                    table: "pet_talk_messages",
+                }, (payload) => appendMessage(payload.new))
+                .subscribe();
+        }
+    </script>
+    <script type="module" src="js/auth-nav.js"></script>
+</body>
+</html>
