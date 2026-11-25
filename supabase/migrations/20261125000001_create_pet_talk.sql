@@ -2,9 +2,16 @@ create table if not exists public.pet_talk_messages (
     id uuid primary key default gen_random_uuid(),
     user_id uuid not null references auth.users(id) on delete cascade,
     display_name text not null,
-    body text not null check (char_length(body) between 1 and 1000),
+    body text check (body is null or char_length(body) between 1 and 1000),
+    image_url text,
     created_at timestamptz not null default now()
 );
+
+alter table public.pet_talk_messages
+    alter column body drop not null;
+
+alter table public.pet_talk_messages
+    add column if not exists image_url text;
 
 alter table public.pet_talk_messages enable row level security;
 

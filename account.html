@@ -43,6 +43,14 @@
                     <strong>Name</strong>
                     <span id="account-name">-</span>
                 </div>
+                <form class="username-edit" id="username-edit">
+                    <label for="username-input"><strong>Rename username</strong></label>
+                    <div>
+                        <input id="username-input" name="username" type="text" minlength="2" maxlength="40" required>
+                        <button type="submit">Save username</button>
+                    </div>
+                    <p class="upload-message" id="username-message" aria-live="polite"></p>
+                </form>
                 <div class="account-detail">
                     <strong>Email</strong>
                     <span id="account-email">-</span>
@@ -105,6 +113,7 @@
 
             document.querySelector("#account-welcome").textContent = `Hello, ${name}. You are successfully logged in.`;
             document.querySelector("#account-name").textContent = name;
+            document.querySelector("#username-input").value = name;
             document.querySelector("#account-email").textContent = user.email || "-";
             document.querySelector("#account-id").textContent = user.id;
             document.querySelector("#account-provider").textContent = provider;
@@ -114,6 +123,35 @@
                 document.querySelector("#profile-avatar").src = metadata.avatar_url;
                 document.querySelector("#remove-profile-picture").hidden = false;
             }
+
+            document.querySelector("#username-edit").addEventListener("submit", async (event) => {
+                event.preventDefault();
+                const input = document.querySelector("#username-input");
+                const message = document.querySelector("#username-message");
+                const newName = input.value.trim();
+
+                if (newName.length < 2) {
+                    message.textContent = "Username must be at least 2 characters.";
+                    return;
+                }
+
+                message.textContent = "Saving...";
+                const { error } = await supabase.auth.updateUser({
+                    data: {
+                        name: newName,
+                        full_name: newName,
+                    },
+                });
+
+                if (error) {
+                    message.textContent = error.message;
+                    return;
+                }
+
+                document.querySelector("#account-name").textContent = newName;
+                document.querySelector("#account-welcome").textContent = `Hello, ${newName}. You are successfully logged in.`;
+                message.textContent = "Username updated.";
+            });
 
             document.querySelector("#profile-picture").addEventListener("change", async (event) => {
                 const file = event.target.files[0];

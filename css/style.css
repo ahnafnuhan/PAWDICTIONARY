@@ -1001,6 +1001,49 @@ header {
     cursor: pointer;
 }
 
+.username-edit {
+    display: grid;
+    gap: 8px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.username-edit > div {
+    display: flex;
+    gap: 8px;
+}
+
+.username-edit input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    font: inherit;
+}
+
+.username-edit button,
+.pettalk-image-button {
+    min-height: 40px;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 9px;
+    background: var(--accent);
+    color: var(--white);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.pettalk-message-image {
+    display: block;
+    max-width: 360px;
+    max-height: 260px;
+    margin-top: 8px;
+    border-radius: 12px;
+    object-fit: cover;
+}
+
 .pettalk-status {
     min-height: 20px;
     padding: 0 28px 12px;
