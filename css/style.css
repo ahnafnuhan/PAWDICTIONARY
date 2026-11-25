@@ -951,6 +951,25 @@ header {
     font-size: 13px;
 }
 
+.pettalk-identity {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pettalk-identity a {
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.pettalk-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
 .pettalk-message p {
     display: inline-block;
     max-width: 90%;

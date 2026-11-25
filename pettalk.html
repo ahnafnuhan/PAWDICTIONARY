@@ -66,13 +66,36 @@
             const user = session.user;
             const metadata = user.user_metadata || {};
             const displayName = metadata.name || metadata.full_name || user.email || "Pet community member";
+            const avatarUrl = metadata.avatar_url || null;
+
+            await supabase
+                .from("public_profiles")
+                .upsert({
+                    id: user.id,
+                    display_name: displayName,
+                    avatar_url: avatarUrl,
+                    updated_at: new Date().toISOString(),
+                });
 
             function appendMessage(message) {
                 const item = document.createElement("article");
                 item.className = "pettalk-message";
 
-                const name = document.createElement("strong");
+                const identity = document.createElement("div");
+                identity.className = "pettalk-identity";
+
+                if (message.avatar_url) {
+                    const avatar = document.createElement("img");
+                    avatar.className = "pettalk-avatar";
+                    avatar.src = message.avatar_url;
+                    avatar.alt = "";
+                    identity.appendChild(avatar);
+                }
+
+                const name = document.createElement("a");
+                name.href = `profile.html?id=${encodeURIComponent(message.user_id)}`;
                 name.textContent = message.display_name || "Member";
+                identity.appendChild(name);
 
                 const body = document.createElement("p");
                 body.textContent = message.body || "";
@@ -91,7 +114,7 @@
                 time.dateTime = message.created_at;
                 time.textContent = new Date(message.created_at).toLocaleString();
 
-                item.prepend(name);
+                item.prepend(identity);
                 item.appendChild(time);
                 messages.appendChild(item);
                 messages.scrollTop = messages.scrollHeight;
@@ -101,7 +124,7 @@
                 status.textContent = "";
                 const { data, error } = await supabase
                     .from("pet_talk_messages")
-                    .select("id, display_name, body, image_url, created_at")
+                    .select("id, user_id, display_name, avatar_url, body, image_url, created_at")
                     .order("created_at", { ascending: true })
                     .limit(200);
 
@@ -160,6 +183,7 @@
                     .insert({
                         user_id: user.id,
                         display_name: displayName,
+                        avatar_url: avatarUrl,
                         body: body || null,
                         image_url: imageUrl,
                     })

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Member Profile | PAWDICTIONARY</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="index.html" class="logo"><span class="logo-paw">PAW</span><span class="logo-dictionary">DICTIONARY</span><span class="logo-dot">.</span></a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="cats.html">Cats</a></li>
+                <li><a href="dogs.html">Dogs</a></li>
+                <li><a href="my_cat.html">My Cat</a></li>
+                <li><a href="about_us.html">About Us</a></li>
+                <li><a href="pettalk.html">PetTalk</a></li>
+                <li><a href="auth.html#signin">Sign In</a></li>
+                <li class="nav-sign-up"><a href="auth.html#signup">Sign Up</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="account-page">
+        <section class="account-card" aria-labelledby="profile-title">
+            <div class="profile-photo-section">
+                <img id="public-profile-avatar" class="profile-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='38' r='18' fill='%23cbd2c4'/%3E%3Cpath d='M18 92a32 32 0 0 1 64 0' fill='%23cbd2c4'/%3E%3C/svg%3E" alt="">
+            </div>
+            <h1 id="profile-title">Loading profile...</h1>
+            <p id="public-profile-status" class="upload-message" aria-live="polite"></p>
+            <div class="account-actions">
+                <a class="primary-btn" href="pettalk.html">Back to PetTalk</a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <h3>PAWDICTIONARY.</h3>
+        <p>Discover. Learn. Care.</p>
+    </footer>
+
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+        const SUPABASE_URL = "https://huqlhlxukomrozoymvdh.supabase.co";
+        const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_dPY3CDRcFiCKG3HStHQbOA_w6mBHuBR";
+        const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+        const status = document.querySelector("#public-profile-status");
+        const title = document.querySelector("#profile-title");
+        const avatar = document.querySelector("#public-profile-avatar");
+        const userId = new URLSearchParams(window.location.search).get("id");
+
+        if (!userId) {
+            title.textContent = "Profile not found";
+            status.textContent = "This profile link is missing a user ID.";
+        } else {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                window.location.replace("auth.html#signin");
+            } else {
+                const { data, error } = await supabase
+                    .from("public_profiles")
+                    .select("display_name, avatar_url")
+                    .eq("id", userId)
+                    .maybeSingle();
+
+                if (error) {
+                    status.textContent = `Could not load profile: ${error.message}`;
+                    title.textContent = "Profile unavailable";
+                } else if (!data) {
+                    title.textContent = "Profile not found";
+                    status.textContent = "This member does not have a public profile yet.";
+                } else {
+                    title.textContent = data.display_name;
+                    status.textContent = "PAWDICTIONARY community member";
+                    if (data.avatar_url) avatar.src = data.avatar_url;
+                }
+            }
+        }
+    </script>
+    <script type="module" src="js/auth-nav.js"></script>
+</body>
+</html>
