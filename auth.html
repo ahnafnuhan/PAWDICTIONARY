@@ -35,6 +35,17 @@
                 <button class="auth-tab" id="signup-tab" type="button" role="tab" aria-controls="signup-panel" aria-selected="false">Sign Up</button>
             </div>
 
+            <button class="google-auth-button" id="google-signin" type="button">
+                <svg aria-hidden="true" viewBox="0 0 18 18" width="18" height="18">
+                    <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.26-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.71-1.57 2.68-3.89 2.68-6.62z"/>
+                    <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z"/>
+                    <path fill="#FBBC05" d="M3.97 10.72A5.41 5.41 0 0 1 3.68 9c0-.6.1-1.18.29-1.72V4.95H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.05l3.01-2.33z"/>
+                    <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.34l2.58-2.58A8.65 8.65 0 0 0 9 0 9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/>
+                </svg>
+                Continue with Google
+            </button>
+            <p class="auth-message" id="google-message" aria-live="polite"></p>
+
             <form class="auth-form" id="signin-panel" role="tabpanel" aria-labelledby="signin-tab">
                 <label class="auth-field" for="signin-email">
                     Email address
@@ -72,12 +83,19 @@
         <p>Discover. Learn. Care.</p>
     </footer>
 
-    <script>
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+        const SUPABASE_URL = "https://huqlhlxukomrozoymvdh.supabase.co";
+        const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_dPY3CDRcFiCKG3HStHQbOA_w6mBHuBR";
+        const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
         const tabs = Array.from(document.querySelectorAll(".auth-tab"));
         const forms = Array.from(document.querySelectorAll(".auth-form"));
 
         function selectAuthMode(mode) {
             const selectedIndex = mode === "signup" ? 1 : 0;
+
             tabs.forEach((tab, index) => {
                 const selected = index === selectedIndex;
                 tab.setAttribute("aria-selected", String(selected));
@@ -87,22 +105,98 @@
 
         tabs.forEach((tab, index) => {
             tab.addEventListener("click", () => {
-                selectAuthMode(index === 1 ? "signup" : "signin");
-                history.replaceState(null, "", index === 1 ? "#signup" : "#signin");
+                const mode = index === 1 ? "signup" : "signin";
+                selectAuthMode(mode);
+                history.replaceState(null, "", `#${mode}`);
             });
         });
 
         window.addEventListener("hashchange", () => {
             selectAuthMode(location.hash === "#signup" ? "signup" : "signin");
         });
+
         selectAuthMode(location.hash === "#signup" ? "signup" : "signin");
 
-        forms.forEach((form) => {
-            form.addEventListener("submit", (event) => {
-                event.preventDefault();
-                form.querySelector(".auth-message").textContent =
-                    "Authentication is not connected yet. Please connect an account service to continue.";
-            });
+        document.querySelector("#signin-panel").addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const form = event.currentTarget;
+            const message = form.querySelector(".auth-message");
+            const button = form.querySelector('button[type="submit"]');
+            message.textContent = "";
+            button.disabled = true;
+
+            try {
+                const email = form.querySelector("#signin-email").value.trim();
+                const password = form.querySelector("#signin-password").value;
+
+                const { error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) throw error;
+
+                window.location.href = "index.html";
+            } catch (error) {
+                message.textContent = error.message;
+            } finally {
+                button.disabled = false;
+            }
+        });
+
+        document.querySelector("#signup-panel").addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const form = event.currentTarget;
+            const message = form.querySelector(".auth-message");
+            const button = form.querySelector('button[type="submit"]');
+            message.textContent = "";
+            button.disabled = true;
+
+            try {
+                const name = form.querySelector("#signup-name").value.trim();
+                const email = form.querySelector("#signup-email").value.trim();
+                const password = form.querySelector("#signup-password").value;
+
+                const { data, error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        data: { name },
+                        emailRedirectTo: `${window.location.origin}/index.html`,
+                    },
+                });
+
+                if (error) throw error;
+
+                if (data.session) {
+                    window.location.href = "index.html";
+                } else {
+                    message.textContent = "Account created. Check your email for a confirmation link.";
+                }
+            } catch (error) {
+                message.textContent = error.message;
+            } finally {
+                button.disabled = false;
+            }
+        });
+
+        document.querySelector("#google-signin").addEventListener("click", async () => {
+            const button = document.querySelector("#google-signin");
+            const message = document.querySelector("#google-message");
+            message.textContent = "";
+            button.disabled = true;
+
+            try {
+                const { error } = await supabase.auth.signInWithOAuth({
+                    provider: "google",
+                    options: {
+                        redirectTo: `${window.location.origin}/index.html`,
+                    },
+                });
+
+                if (error) throw error;
+            } catch (error) {
+                message.textContent = error.message;
+                button.disabled = false;
+            }
         });
     </script>
 </body>
